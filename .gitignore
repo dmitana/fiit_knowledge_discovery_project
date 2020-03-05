@@ -1,0 +1,12 @@
+# Data
+data
+!src/data
+
+# Python
+.env
+.venv
+__pycache__
+*.pyc
+
+# Jupyter notebook
+.ipynb_checkpoints
