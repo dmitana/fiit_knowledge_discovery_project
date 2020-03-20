@@ -41,16 +41,18 @@ class OutlierTransformer(TransformerMixin):
 
     def fit(self, df, y=None, **fit_params):
         iqr = df[self.column].quantile(q=0.75) - \
-              df[self.column].quantile(q=0.25)
+            df[self.column].quantile(q=0.25)
 
         self.upper_bound = df[self.column].quantile(q=0.75) + 1.5 * iqr
         self.lower_bound = df[self.column].quantile(q=0.25) - 1.5 * iqr
+        self.percentile_5 = df[self.column].quantile(q=0.05)
+        self.percentile_95 = df[self.column].quantile(q=0.95)
         return self
 
     def transform(self, df, **transform_params):
         df = df.copy()
         df.loc[df[self.column] > self.upper_bound, self.column] = \
-            df[self.column].quantile(q=0.95)
+            self.percentile_95
         df.loc[df[self.column] < self.lower_bound, self.column] = \
-            df[self.column].quantile(q=0.05)
+            self.percentile_5
         return df
