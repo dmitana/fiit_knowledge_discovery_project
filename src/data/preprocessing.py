@@ -111,3 +111,15 @@ class PrimaryUseTransformer(TransformerMixin):
             'primary_use'
         ] = 'Other'
         return df
+
+
+class FeatureSelectorTransformer(TransformerMixin):
+    """Select given `feature` from given `df`."""
+    def __init__(self, feature):
+        self.feature = feature
+
+    def fit(self, df, y=None):
+        return self
+
+    def transform(self, df):
+        return df[[self.feature]]
