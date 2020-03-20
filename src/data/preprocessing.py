@@ -4,7 +4,8 @@ import numpy as np
 from sklearn.base import TransformerMixin
 
 
-class RollingAverageNanFiller(TransformerMixin):
+class RollingAverageNanTransformer(TransformerMixin):
+    """Replace NaN values with rolling average."""
     def __init__(self, column, window_size=5):
         self.column = column
         self.window_size = window_size
@@ -41,6 +42,7 @@ class RollingAverageNanFiller(TransformerMixin):
 
 
 class OutlierTransformer(TransformerMixin):
+    """Replace outliers with 5th percentile or 95th percentile."""
     def __init__(self, column):
         self.column = column
 
