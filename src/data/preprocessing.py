@@ -61,3 +61,53 @@ class OutlierTransformer(TransformerMixin):
         df.loc[df[self.column] < self.lower_bound, self.column] = \
             self.percentile_5
         return df
+
+
+class PrimaryUseTransformer(TransformerMixin):
+    """
+    Merge less numerous categories of `primary_use` feature to
+    category `Other`.
+    """
+    def fit(self, df, y=None, **fit_params):
+        return self
+
+    def transform(self, df, **transform_params):
+        df = df.copy()
+        df = self.merge_categories(df)
+        return df
+
+    def merge_categories(self, df):
+        df.loc[
+            (
+                ~df['primary_use'].str.contains(
+                    'Lodging/residential',
+                    regex=True
+                )
+            ) &
+            (
+                ~df['primary_use'].str.contains(
+                    'Public services',
+                    regex=True
+                )
+            ) &
+            (
+                ~df['primary_use'].str.contains(
+                    'Entertainment/public assembly',
+                    regex=True
+                )
+            ) &
+            (
+                ~df['primary_use'].str.contains(
+                    'Office',
+                    regex=True
+                )
+            ) &
+            (
+                ~df['primary_use'].str.contains(
+                    'Education',
+                    regex=True
+                )
+            ),
+            'primary_use'
+        ] = 'Other'
+        return df
