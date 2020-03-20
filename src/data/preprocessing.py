@@ -16,22 +16,27 @@ class RollingAverageNanFiller(TransformerMixin):
         df = df.copy()
         empty_rows = df[df[self.column].isna()][['site_id', 'timestamp']]
         for site_id, timestamp in empty_rows.values:
-            # obtain timestamp self.window_size hours before timestamp
-            prew_timestamp = datetime.datetime\
+            # Obtain timestamp self.window_size hours before timestamp
+            prew_timestamp = datetime.datetime \
                 .strptime(timestamp, "%Y-%m-%d %H:%M:%S") - \
                 datetime.timedelta(hours=self.window_size)
-            prew_timestamp = datetime.datetime\
+            prew_timestamp = datetime.datetime \
                 .strftime(prew_timestamp, "%Y-%m-%d %H:%M:%S")
 
             fill_in_value = np.mean(
-                df[(df.site_id == site_id) &
-                   (df.timestamp >= prew_timestamp) &
-                   (df.timestamp < timestamp)][self.column].values
+                df[
+                    (df.site_id == site_id) &
+                    (df.timestamp >= prew_timestamp) &
+                    (df.timestamp < timestamp)
+                ][self.column].values
             ).round(1)
 
-            # fill in mean value now in case next value is also NaN
-            df.loc[(df.site_id == site_id) &
-                   (df.timestamp == timestamp), self.column] = fill_in_value
+            # Fill in mean value now in case next value is also NaN
+            df.loc[
+                (df.site_id == site_id) &
+                (df.timestamp == timestamp),
+                self.column
+            ] = fill_in_value
         return df
 
 
