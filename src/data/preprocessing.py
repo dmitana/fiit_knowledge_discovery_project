@@ -1,5 +1,6 @@
 import datetime
 import numpy as np
+import pandas as pd
 
 from sklearn.base import TransformerMixin
 
@@ -11,6 +12,13 @@ class RollingAverageNanTransformer(TransformerMixin):
         self.window_size = window_size
 
     def fit(self, df, y=None, **fit_params):
+        self.averages_per_site_per_hour = {}
+        aux = df.copy()
+        aux['timestamp_hour'] = \
+            pd.to_datetime(aux['timestamp']).apply(lambda x: x.hour)
+        for i in range(16):
+            self.averages_per_site_per_hour[i] = aux[aux.site_id == i] \
+                .groupby(by="timestamp_hour").mean()[self.column].values
         return self
 
     def transform(self, df, **transform_params):
@@ -18,19 +26,22 @@ class RollingAverageNanTransformer(TransformerMixin):
         empty_rows = df[df[self.column].isna()][['site_id', 'timestamp']]
         for site_id, timestamp in empty_rows.values:
             # Obtain timestamp self.window_size hours before timestamp
-            prew_timestamp = datetime.datetime \
-                .strptime(timestamp, "%Y-%m-%d %H:%M:%S") - \
+            current_timestamp = datetime.datetime \
+                .strptime(timestamp, "%Y-%m-%d %H:%M:%S")
+            prew_timestamp = current_timestamp - \
                 datetime.timedelta(hours=self.window_size)
             prew_timestamp = datetime.datetime \
                 .strftime(prew_timestamp, "%Y-%m-%d %H:%M:%S")
 
-            fill_in_value = np.mean(
-                df[
-                    (df.site_id == site_id) &
-                    (df.timestamp >= prew_timestamp) &
-                    (df.timestamp < timestamp)
-                ][self.column].values
-            ).round(1)
+            df_slice = df[(df.site_id == site_id) &
+                          (df.timestamp >= prew_timestamp) &
+                          (df.timestamp < timestamp)
+                         ][self.column].dropna().values
+            if len(df_slice) > 0:
+                fill_in_value = np.mean(df_slice).round(1)
+            else:
+                fill_in_value = self.averages_per_site_per_hour[site_id] \
+                    [current_timestamp.hour]
 
             # Fill in mean value now in case next value is also NaN
             df.loc[
