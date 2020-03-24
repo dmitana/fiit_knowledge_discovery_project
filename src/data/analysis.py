@@ -44,4 +44,5 @@ def get_outliers(df, column):
     iqr = df[column].quantile(q=0.75) - df[column].quantile(q=0.25)
     upper_bound = df[column].quantile(q=0.75) + 1.5 * iqr
     lower_bound = df[column].quantile(q=0.25) - 1.5 * iqr
+    print(f'lower bound: {lower_bound}\nupper bound: {upper_bound}')
     return df[(df[column] > upper_bound) | (df[column] < lower_bound)]
