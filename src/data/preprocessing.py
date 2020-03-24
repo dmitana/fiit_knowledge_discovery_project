@@ -33,15 +33,17 @@ class RollingAverageNanTransformer(TransformerMixin):
             prew_timestamp = datetime.datetime \
                 .strftime(prew_timestamp, "%Y-%m-%d %H:%M:%S")
 
-            df_slice = df[(df.site_id == site_id) &
-                          (df.timestamp >= prew_timestamp) &
-                          (df.timestamp < timestamp)
-                         ][self.column].dropna().values
+            df_slice = df[
+                (df.site_id == site_id) &
+                (df.timestamp >= prew_timestamp) &
+                (df.timestamp < timestamp)
+            ][self.column].dropna().values
             if len(df_slice) > 0:
                 fill_in_value = np.mean(df_slice).round(1)
             else:
-                fill_in_value = self.averages_per_site_per_hour[site_id] \
-                    [current_timestamp.hour]
+                current_hour = current_timestamp.hour
+                fill_in_value = self \
+                    .averages_per_site_per_hour[site_id][current_hour]
 
             # Fill in mean value now in case next value is also NaN
             df.loc[
