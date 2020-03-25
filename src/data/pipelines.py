@@ -1,6 +1,6 @@
 from src.data.preprocessing import PrimaryUseTransformer, \
     FeatureSelectorTransformer, RollingAverageNanTransformer, \
-    OutlierTransformer
+    OutlierTransformer, ValuePicker
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
@@ -57,5 +57,12 @@ wind_speed_without_outliers_pipeline = Pipeline([
 wind_direction_pipeline = Pipeline([
     ('rolling average', RollingAverageNanTransformer('wind_direction')),
     ('feature select', FeatureSelectorTransformer('wind_direction')),
+    ('normalization', StandardScaler())
+])
+
+meter_pipeline = Pipeline([
+    ('meter type', ValuePicker(feature='meter', specific_value=0)),
+    ('meter reading', ValuePicker(feature='meter_reading', threshold=200)),
+    ('feature select', FeatureSelectorTransformer('meter_reading')),
     ('normalization', StandardScaler())
 ])
