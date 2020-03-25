@@ -138,3 +138,36 @@ class FeatureSelectorTransformer(TransformerMixin):
 
     def transform(self, df):
         return df[[self.feature]]
+
+
+class ValuePicker(TransformerMixin):
+    """
+    Selects only those rows from given `feature` of dataframe `df`,
+    where value fulfills either `threshold` or `specific_value`
+    constrains.
+    """
+    def __init__(self, feature, threshold=None, specific_value=None):
+        """
+        :param feature: str, name of feature for which values will be
+            picked
+        :param threshold: int, only rows where `feature` values are
+            smaller than threshold will be returned
+        :param specific_value: int, only rows where `feature` values
+            are equal to specific_value will be returned
+        """
+        self.feature = feature
+        self.threshold = threshold
+        self.specific_value = specific_value
+
+    def fit(self, df, y=None):
+        return self
+
+    def transform(self, df):
+        if self.threshold is not None:
+            rows_filter = df[self.feature] < self.threshold
+        elif self.specific_value is not None:
+            rows_filter = df[self.feature] == self.specific_value
+        else:
+            raise ValueError("Either `threshold` or `specific_value` parameter"
+                             " must have some value.")
+        return df[rows_filter]
