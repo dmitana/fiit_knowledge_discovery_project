@@ -90,9 +90,7 @@ class PrimaryUseTransformer(TransformerMixin):
         return self
 
     def transform(self, df, **transform_params):
-        df = self.merge_categories(df)
-        self.df = df[['primary_use']]
-        return self.df
+        return self.merge_categories(df)[['primary_use']]
 
     def merge_categories(self, df):
         df.loc[
@@ -131,7 +129,7 @@ class PrimaryUseTransformer(TransformerMixin):
         return df
 
     def get_feature_names(self):
-        return self.df.columns.tolist()
+        return ['primary_use']
 
 
 class FeatureSelectorTransformer(TransformerMixin):
