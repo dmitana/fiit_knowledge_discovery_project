@@ -83,14 +83,16 @@ class PrimaryUseTransformer(TransformerMixin):
     Merge less numerous categories of `primary_use` feature to
     category `Other`.
 
-    Entire dataframe is returned, not only transformed values.
+    Returned is dataframe containing only transformed columns.
     Transformation is done in place.
     """
     def fit(self, df, y=None, **fit_params):
         return self
 
     def transform(self, df, **transform_params):
-        return self.merge_categories(df)
+        df = self.merge_categories(df)
+        self.df = df[['primary_use']]
+        return self.df
 
     def merge_categories(self, df):
         df.loc[
@@ -127,6 +129,9 @@ class PrimaryUseTransformer(TransformerMixin):
             'primary_use'
         ] = 'Other'
         return df
+
+    def get_feature_names(self):
+        return self.df.columns.tolist()
 
 
 class FeatureSelectorTransformer(TransformerMixin):
