@@ -12,6 +12,10 @@ building_id_pipeline = Pipeline([
     ('select feature', FeatureSelectorTransformer('building_id'))
 ])
 
+timestamp_pipeline = Pipeline([
+    ('select feature', FeatureSelectorTransformer('timestamp'))
+])
+
 primary_use_pipeline = Pipeline([
     ('merge categories', PrimaryUseTransformer()),
     ('one hot encoding', OneHotEncoderTransformer('primary_use'))
@@ -64,6 +68,5 @@ wind_direction_pipeline = Pipeline([
 meter_pipeline = Pipeline([
     ('meter type', ValuePicker(feature='meter', specific_value=0)),
     ('meter reading', ValuePicker(feature='meter_reading', threshold=200)),
-    ('feature select', FeatureSelectorTransformer('meter_reading')),
-    ('normalization', StandardScaler())
+    ('normalization', StandardScalerTransformer('meter_reading'))
 ])

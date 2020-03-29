@@ -167,6 +167,8 @@ class ValuePicker(TransformerMixin):
     Selects only those rows from given `feature` of dataframe `df`,
     where value fulfills either `threshold` or `specific_value`
     constrains.
+
+    Entire dataframe is returned.
     """
     def __init__(self, feature, threshold=None, specific_value=None):
         """
@@ -190,9 +192,14 @@ class ValuePicker(TransformerMixin):
         elif self.specific_value is not None:
             rows_filter = df[self.feature] == self.specific_value
         else:
-            raise ValueError("Either `threshold` or `specific_value` parameter"
-                             " must have some value.")
+            raise ValueError(
+                'Either `threshold` or `specific_value` parameter must '
+                'have some value.'
+            )
         return df[rows_filter]
+
+    def get_feature_names(self):
+        return [self.feature]
 
 
 class OneHotEncoderTransformer(TransformerMixin):
