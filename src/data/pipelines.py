@@ -23,8 +23,7 @@ square_feet_pipeline = Pipeline([
 
 air_temperature_pipeline = Pipeline([
     ('rolling average', RollingAverageNanTransformer('air_temperature')),
-    ('feature select', FeatureSelectorTransformer('air_temperature')),
-    ('normalization', StandardScaler())
+    ('normalization', StandardScalerTransformer('air_temperature'))
 ])
 
 air_temperature_without_outliers_pipeline = Pipeline([
@@ -34,8 +33,7 @@ air_temperature_without_outliers_pipeline = Pipeline([
 
 dew_temperature_pipeline = Pipeline([
     ('rolling average', RollingAverageNanTransformer('dew_temperature')),
-    ('feature select', FeatureSelectorTransformer('dew_temperature')),
-    ('normalization', StandardScaler())
+    ('normalization', StandardScalerTransformer('dew_temperature'))
 ])
 
 dew_temperature_without_outliers_pipeline = Pipeline([
@@ -45,14 +43,12 @@ dew_temperature_without_outliers_pipeline = Pipeline([
 
 sea_level_pressure_pipeline = Pipeline([
     ('rolling average', RollingAverageNanTransformer('sea_level_pressure')),
-    ('feature select', FeatureSelectorTransformer('sea_level_pressure')),
-    ('normalization', StandardScaler())
+    ('normalization', StandardScalerTransformer('sea_level_pressure'))
 ])
 
 wind_speed_pipeline = Pipeline([
     ('rolling average', RollingAverageNanTransformer('wind_speed')),
-    ('feature select', FeatureSelectorTransformer('wind_speed')),
-    ('normalization', StandardScaler())
+    ('normalization', StandardScalerTransformer('wind_speed'))
 ])
 
 wind_speed_without_outliers_pipeline = Pipeline([
@@ -62,8 +58,7 @@ wind_speed_without_outliers_pipeline = Pipeline([
 
 wind_direction_pipeline = Pipeline([
     ('rolling average', RollingAverageNanTransformer('wind_direction')),
-    ('feature select', FeatureSelectorTransformer('wind_direction')),
-    ('normalization', StandardScaler())
+    ('normalization', StandardScalerTransformer('wind_direction'))
 ])
 
 meter_pipeline = Pipeline([

@@ -6,7 +6,11 @@ from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
 
 class RollingAverageNanTransformer(TransformerMixin):
-    """Replace NaN values with rolling average."""
+    """
+    Replace NaN values with rolling average.
+
+    Returned dataframe contains only transformed column.
+    """
     def __init__(self, column, window_size=5):
         self.column = column
         self.window_size = window_size
@@ -51,11 +55,18 @@ class RollingAverageNanTransformer(TransformerMixin):
                 (df.timestamp == timestamp),
                 self.column
             ] = fill_in_value
-        return df
+        return df[[self.column]]
+
+    def get_feature_names(self):
+        return self.column
 
 
 class OutlierTransformer(TransformerMixin):
-    """Replace outliers with 5th percentile or 95th percentile."""
+    """
+    Replace outliers with 5th percentile or 95th percentile.
+
+    Entire dataframe is returned.
+    """
     def __init__(self, column):
         self.column = column
 
@@ -83,7 +94,7 @@ class PrimaryUseTransformer(TransformerMixin):
     Merge less numerous categories of `primary_use` feature to
     category `Other`.
 
-    Returned is dataframe containing only transformed columns.
+    Returned dataframe contains only transformed column.
     Transformation is done in place.
     """
     def fit(self, df, y=None, **fit_params):
@@ -136,7 +147,7 @@ class FeatureSelectorTransformer(TransformerMixin):
     """
     Select given `feature` from given `df`.
 
-    Returned is dataframe containing only transformed columns.
+    Returned dataframe contains only transformed column.
     """
     def __init__(self, feature):
         self.feature = feature
@@ -188,7 +199,7 @@ class OneHotEncoderTransformer(TransformerMixin):
     """
     Encode given `column` using one hot encoding.
 
-    Returned is dataframe containing only transformed columns.
+    Returned dataframe contains only transformed columns.
     """
     def __init__(self, column):
         """
@@ -218,7 +229,7 @@ class StandardScalerTransformer(TransformerMixin):
     """
     Scale given `column` using z-score normalization.
 
-    Returned is dataframe containing only transformed columns.
+    Returned dataframe contains only transformed column.
     """
     def __init__(self, column):
         """
