@@ -1,6 +1,7 @@
 from src.data.preprocessing import PrimaryUseTransformer, \
     FeatureSelectorTransformer, RollingAverageNanTransformer, \
-    OutlierTransformer, ValuePicker, OneHotEncoderTransformer
+    OutlierTransformer, ValuePicker, OneHotEncoderTransformer, \
+    StandardScalerTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
@@ -10,8 +11,7 @@ primary_use_pipeline = Pipeline([
 ])
 
 square_feet_pipeline = Pipeline([
-    ('feature select', FeatureSelectorTransformer('square_feet')),
-    ('normalization', StandardScaler())
+    ('normalization', StandardScalerTransformer('square_feet'))
 ])
 
 air_temperature_pipeline = Pipeline([

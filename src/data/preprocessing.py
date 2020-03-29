@@ -2,7 +2,7 @@ import datetime
 import numpy as np
 import pandas as pd
 from sklearn.base import TransformerMixin
-from sklearn.preprocessing import OneHotEncoder
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
 
 class RollingAverageNanTransformer(TransformerMixin):
@@ -178,8 +178,7 @@ class OneHotEncoderTransformer(TransformerMixin):
     """
     Encode given `column` using one hot encoding.
 
-    Entire dataframe is returned, not only transformed values.
-    Transformation is done in place.
+    Returned is dataframe containing only transformed columns.
     """
     def __init__(self, column):
         """
@@ -196,8 +195,39 @@ class OneHotEncoderTransformer(TransformerMixin):
         return self
 
     def transform(self, df, **transform_params):
-        df[self.categories] = pd.DataFrame(
-            self.one_hot_encoder.transform(df[[self.column]])
+        return pd.DataFrame(
+            self.one_hot_encoder.transform(df[[self.column]]),
+            columns=self.categories
         )
-        df.drop(columns=[self.column], inplace=True)
-        return df
+
+    def get_feature_names(self):
+        return self.categories
+
+
+class StandardScalerTransformer(TransformerMixin):
+    """
+    Scale given `column` using z-score normalization.
+
+    Returned is dataframe containing only transformed columns.
+    """
+    def __init__(self, column):
+        """
+        Create a new instance of `StandardScalerTransformer` class.
+
+        :param column: str, column to be scaled.
+        """
+        self.column = column
+
+    def fit(self, df, y=None, **fit_params):
+        self.scaler = StandardScaler()
+        self.scaler.fit(df[[self.column]])
+        return self
+
+    def transform(self, df, **transform_params):
+        return pd.DataFrame(
+            self.scaler.transform(df[[self.column]]),
+            columns=[self.column]
+        )
+
+    def get_feature_names(self):
+        return [self.column]
