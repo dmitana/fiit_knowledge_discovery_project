@@ -3,7 +3,14 @@ from src.data.preprocessing import PrimaryUseTransformer, \
     OutlierTransformer, ValuePicker, OneHotEncoderTransformer, \
     StandardScalerTransformer
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import StandardScaler
+
+site_id_pipeline = Pipeline([
+    ('select feature', FeatureSelectorTransformer('site_id'))
+])
+
+building_id_pipeline = Pipeline([
+    ('select feature', FeatureSelectorTransformer('building_id'))
+])
 
 primary_use_pipeline = Pipeline([
     ('merge categories', PrimaryUseTransformer()),

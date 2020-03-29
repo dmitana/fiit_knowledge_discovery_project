@@ -130,7 +130,11 @@ class PrimaryUseTransformer(TransformerMixin):
 
 
 class FeatureSelectorTransformer(TransformerMixin):
-    """Select given `feature` from given `df`."""
+    """
+    Select given `feature` from given `df`.
+
+    Returned is dataframe containing only transformed columns.
+    """
     def __init__(self, feature):
         self.feature = feature
 
@@ -139,6 +143,9 @@ class FeatureSelectorTransformer(TransformerMixin):
 
     def transform(self, df):
         return df[[self.feature]]
+
+    def get_feature_names(self):
+        return [self.feature]
 
 
 class ValuePicker(TransformerMixin):
