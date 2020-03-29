@@ -1,13 +1,12 @@
 from src.data.preprocessing import PrimaryUseTransformer, \
     FeatureSelectorTransformer, RollingAverageNanTransformer, \
-    OutlierTransformer, ValuePicker
+    OutlierTransformer, ValuePicker, OneHotEncoderTransformer
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.preprocessing import StandardScaler
 
 primary_use_pipeline = Pipeline([
     ('merge categories', PrimaryUseTransformer()),
-    ('feature select', FeatureSelectorTransformer('primary_use')),
-    ('one hot encoding', OneHotEncoder(sparse=False))
+    ('one hot encoding', OneHotEncoderTransformer('primary_use'))
 ])
 
 square_feet_pipeline = Pipeline([

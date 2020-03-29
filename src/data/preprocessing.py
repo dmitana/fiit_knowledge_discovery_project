@@ -1,8 +1,8 @@
 import datetime
 import numpy as np
 import pandas as pd
-
 from sklearn.base import TransformerMixin
+from sklearn.preprocessing import OneHotEncoder
 
 
 class RollingAverageNanTransformer(TransformerMixin):
@@ -82,14 +82,15 @@ class PrimaryUseTransformer(TransformerMixin):
     """
     Merge less numerous categories of `primary_use` feature to
     category `Other`.
+
+    Entire dataframe is returned, not only transformed values.
+    Transformation is done in place.
     """
     def fit(self, df, y=None, **fit_params):
         return self
 
     def transform(self, df, **transform_params):
-        df = df.copy()
-        df = self.merge_categories(df)
-        return df
+        return self.merge_categories(df)
 
     def merge_categories(self, df):
         df.loc[
@@ -171,3 +172,32 @@ class ValuePicker(TransformerMixin):
             raise ValueError("Either `threshold` or `specific_value` parameter"
                              " must have some value.")
         return df[rows_filter]
+
+
+class OneHotEncoderTransformer(TransformerMixin):
+    """
+    Encode given `column` using one hot encoding.
+
+    Entire dataframe is returned, not only transformed values.
+    Transformation is done in place.
+    """
+    def __init__(self, column):
+        """
+        Create a new instance of `OneHotEncoderTransformer` class.
+
+        :param column: str, column to be one hot encoded.
+        """
+        self.column = column
+
+    def fit(self, df, y=None, **fit_params):
+        self.one_hot_encoder = OneHotEncoder(sparse=False)
+        self.one_hot_encoder.fit(df[[self.column]])
+        self.categories = self.one_hot_encoder.categories_[0]
+        return self
+
+    def transform(self, df, **transform_params):
+        df[self.categories] = pd.DataFrame(
+            self.one_hot_encoder.transform(df[[self.column]])
+        )
+        df.drop(columns=[self.column], inplace=True)
+        return df
