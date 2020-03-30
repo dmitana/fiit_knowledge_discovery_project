@@ -3,7 +3,8 @@ from src.data.pipelines import site_id_pipeline, building_id_pipeline, \
     air_temperature_without_outliers_pipeline, dew_temperature_pipeline, \
     dew_temperature_without_outliers_pipeline, wind_direction_pipeline, \
     wind_speed_pipeline, wind_speed_without_outliers_pipeline, \
-    timestamp_pipeline
+    timestamp_pipeline, meter_pipeline, building_id_meter_pipeline, \
+    timestamp_meter_pipeline
 import pandas as pd
 from sklearn.pipeline import FeatureUnion, Pipeline
 
@@ -65,6 +66,15 @@ weather_without_outliers_fu = CustomFeatureUnion(
         ('dew temperature', dew_temperature_without_outliers_pipeline),
         ('wind direction', wind_direction_pipeline),
         ('wind speed', wind_speed_without_outliers_pipeline)
+    ],
+    n_jobs=-1
+)
+
+meter_fu = CustomFeatureUnion(
+    [
+        ('building id', building_id_meter_pipeline),
+        ('timestamp', timestamp_meter_pipeline),
+        ('meter', meter_pipeline)
     ],
     n_jobs=-1
 )

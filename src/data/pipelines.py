@@ -70,3 +70,15 @@ meter_pipeline = Pipeline([
     ('meter reading', ValuePicker(feature='meter_reading', threshold=200)),
     ('normalization', StandardScalerTransformer('meter_reading'))
 ])
+
+building_id_meter_pipeline = Pipeline([
+    ('meter type', ValuePicker(feature='meter', specific_value=0)),
+    ('meter reading', ValuePicker(feature='meter_reading', threshold=200)),
+    ('select feature', FeatureSelectorTransformer('building_id'))
+])
+
+timestamp_meter_pipeline = Pipeline([
+    ('meter type', ValuePicker(feature='meter', specific_value=0)),
+    ('meter reading', ValuePicker(feature='meter_reading', threshold=200)),
+    ('select feature', FeatureSelectorTransformer('timestamp'))
+])
