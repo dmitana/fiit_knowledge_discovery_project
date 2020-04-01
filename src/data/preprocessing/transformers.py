@@ -33,7 +33,7 @@ class RollingAverageNanTransformer(TransformerMixin):
             current_timestamp = datetime.datetime \
                 .strptime(timestamp, "%Y-%m-%d %H:%M:%S")
             prew_timestamp = current_timestamp - \
-                datetime.timedelta(hours=self.window_size)
+                             datetime.timedelta(hours=self.window_size)
             prew_timestamp = datetime.datetime \
                 .strftime(prew_timestamp, "%Y-%m-%d %H:%M:%S")
 
@@ -72,7 +72,7 @@ class OutlierTransformer(TransformerMixin):
 
     def fit(self, df, y=None, **fit_params):
         iqr = df[self.column].quantile(q=0.75) - \
-            df[self.column].quantile(q=0.25)
+              df[self.column].quantile(q=0.25)
 
         self.upper_bound = df[self.column].quantile(q=0.75) + 1.5 * iqr
         self.lower_bound = df[self.column].quantile(q=0.25) - 1.5 * iqr
@@ -236,15 +236,17 @@ class StandardScalerTransformer(TransformerMixin):
     """
     Scale given `column` using z-score normalization.
 
-    Returned dataframe contains only transformed column.
+    Returned dataframe contains only transformed column if `all_columns`
+    is False else it returns entire dataframe with scaled `column`.
     """
-    def __init__(self, column):
+    def __init__(self, column, all_columns=False):
         """
         Create a new instance of `StandardScalerTransformer` class.
 
         :param column: str, column to be scaled.
         """
         self.column = column
+        self.all_columns = all_columns
 
     def fit(self, df, y=None, **fit_params):
         self.scaler = StandardScaler()
@@ -252,10 +254,100 @@ class StandardScalerTransformer(TransformerMixin):
         return self
 
     def transform(self, df, **transform_params):
-        return pd.DataFrame(
-            self.scaler.transform(df[[self.column]]),
-            columns=[self.column]
-        )
+        if self.all_columns:
+            df[self.column] = self.scaler.transform(df[[self.column]])
+        else:
+            df = pd.DataFrame(
+                self.scaler.transform(df[[self.column]]),
+                columns=[self.column]
+            )
+        return df
 
     def get_feature_names(self):
         return [self.column]
+
+
+class AddPreviousMeterReadingTransformer(TransformerMixin):
+    """
+    Adds meter reading from previous n-hours as new features.
+
+    Returns entire dataframe with `time_horizon` new features
+    representing previous meter readings.
+    """
+    def __init__(self, time_horizon, sample_length=3600):
+        """
+        Sets `time_horizon` and `sample_length`.
+
+        :param time_horizon: int, number of previous values that will be
+            added as new features
+        :param sample_length: int (default: 3600), number of seconds
+            between two samples
+        """
+        self.time_horizon = time_horizon
+        self.sample_length = sample_length
+
+    def _get_new_date(self, row, step=1):
+        """
+        Gets new date `step` times `self.sample_length` in the future
+        compared to date of `row`.
+
+        :param row: pd.Series, row for which future date will be found
+        :param step: int, how many steps to look into future
+        :return: Datetime, future date
+        """
+        new_date = row['date'] + datetime.timedelta(
+            seconds=self.sample_length * step
+        )
+        return [row['building_id'], row['meter'], str(new_date)]
+
+    def fit(self, df, y=None, **fit_params):
+        return self
+
+    def transform(self, df, **transform_params):
+        df = df.copy().reset_index(drop=True)
+        df['date'] = pd.to_datetime(df['timestamp'])
+        data = {}
+        for i in range(1, self.time_horizon + 1):
+            column = f'timestamp_{i}'
+            aux = df.apply(lambda x: self._get_new_date(x, step=i), axis=1)
+            data['building_id'] = aux.apply(lambda x: x[0])
+            data['meter'] = aux.apply(lambda x: x[1])
+            data[column] = aux.apply(lambda x: x[2])
+        data['meter_reading'] = df['meter_reading']
+
+        new_df = pd.DataFrame(data)
+        for i in range(1, self.time_horizon + 1):
+            timestamp = f'timestamp_{i}'
+            aux_df = new_df[['building_id',
+                             'meter',
+                             'meter_reading',
+                             timestamp]]
+            aux_df.columns = ['building_id',
+                              'meter',
+                              'meter_reading',
+                              'timestamp']
+
+            # Dataframes should be joined by unique values
+            df = df.join(aux_df.set_index(['building_id',
+                                           'meter',
+                                           'timestamp']),
+                         on=['building_id', 'meter', 'timestamp'],
+                         rsuffix=f"_{i}").drop_duplicates()
+        df = df.fillna(0)
+        del df['date']
+        return df
+
+
+class ColumnSelector(TransformerMixin):
+    """Returns only `columns` from given dataframe."""
+    def __init__(self, columns):
+        self.columns = columns
+
+    def fit(self, df, y=None, **fit_params):
+        return self
+
+    def transform(self, df, **transform_params):
+        return df[self.columns]
+
+    def get_feature_names(self):
+        return self.columns
