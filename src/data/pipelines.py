@@ -1,4 +1,4 @@
-from src.data.preprocessing import PrimaryUseTransformer, \
+from src.data.preprocessing.transformers import PrimaryUseTransformer, \
     FeatureSelectorTransformer, RollingAverageNanTransformer, \
     OutlierTransformer, ValuePicker, OneHotEncoderTransformer, \
     StandardScalerTransformer
