@@ -341,18 +341,3 @@ class AddPreviousMeterReadingTransformer(TransformerMixin):
 
     def get_feature_names(self):
         return self.columns
-
-
-class ColumnSelector(TransformerMixin):
-    """Returns only `columns` from given dataframe."""
-    def __init__(self, columns):
-        self.columns = columns
-
-    def fit(self, df, y=None, **fit_params):
-        return self
-
-    def transform(self, df, **transform_params):
-        return df[self.columns]
-
-    def get_feature_names(self):
-        return self.columns
