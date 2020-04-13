@@ -69,16 +69,8 @@ wind_direction_pipeline = Pipeline([
 meter_pipeline = Pipeline([
     ('meter type', ValuePicker(feature='meter', specific_value=0)),
     ('meter reading', ValuePicker(feature='meter_reading', threshold=200)),
-    ('normalization',
-     StandardScalerTransformer('meter_reading', all_columns=True)),
     ('previous meter readings',
-     AddPreviousMeterReadingTransformer(time_horizon=5, sample_length=3600)),
-    ('column selector', ColumnSelector(['meter_reading',
-                                        'meter_reading_1',
-                                        'meter_reading_2',
-                                        'meter_reading_3',
-                                        'meter_reading_4',
-                                        'meter_reading_5']))
+     AddPreviousMeterReadingTransformer(time_horizon=5, sample_length=3600))
 ])
 
 building_id_meter_pipeline = Pipeline([

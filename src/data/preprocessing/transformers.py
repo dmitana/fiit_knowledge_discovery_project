@@ -285,6 +285,9 @@ class AddPreviousMeterReadingTransformer(TransformerMixin):
         """
         self.time_horizon = time_horizon
         self.sample_length = sample_length
+        self.columns = ['meter_reading']
+        for i in range(1, self.time_horizon + 1):
+            self.columns.append(f'meter_reading_{i}')
 
     def _get_new_date(self, row, step=1):
         """
@@ -334,8 +337,10 @@ class AddPreviousMeterReadingTransformer(TransformerMixin):
                          on=['building_id', 'meter', 'timestamp'],
                          rsuffix=f"_{i}").drop_duplicates()
         df = df.fillna(0)
-        del df['date']
-        return df
+        return df[self.columns]
+
+    def get_feature_names(self):
+        return self.columns
 
 
 class ColumnSelector(TransformerMixin):
