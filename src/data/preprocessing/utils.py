@@ -25,12 +25,13 @@ def merge_data(building, weather, meter, hour_time_diff=1):
         ).strftime("%Y-%m-%d %H:%M:%S")
     )
     meter_building = pd.merge(meter, building, on='building_id')
-    return pd.merge(
+    merged_data = pd.merge(
         meter_building,
         weather_aux,
         how='left',
         on=['site_id', 'timestamp']
     )[1:]
+    return merged_data.dropna()
 
 
 def preprocess_and_merge_data(
