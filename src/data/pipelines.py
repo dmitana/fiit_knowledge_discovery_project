@@ -1,8 +1,7 @@
 from src.data.preprocessing.transformers import PrimaryUseTransformer, \
     FeatureSelectorTransformer, RollingAverageNanTransformer, \
     OutlierTransformer, ValuePicker, OneHotEncoderTransformer, \
-    StandardScalerTransformer, AddPreviousMeterReadingTransformer, \
-    ColumnSelector
+    StandardScalerTransformer, AddPreviousMeterReadingTransformer
 from sklearn.pipeline import Pipeline
 
 site_id_pipeline = Pipeline([
@@ -69,6 +68,14 @@ wind_direction_pipeline = Pipeline([
 meter_pipeline = Pipeline([
     ('meter type', ValuePicker(feature='meter', specific_value=0)),
     ('meter reading', ValuePicker(feature='meter_reading', threshold=200)),
+    (
+        'normalization',
+        StandardScalerTransformer(
+            'meter_reading',
+            new_column='meter_reading_scaled',
+            all_columns=True
+        )
+    ),
     ('previous meter readings',
      AddPreviousMeterReadingTransformer(time_horizon=5, sample_length=3600))
 ])
