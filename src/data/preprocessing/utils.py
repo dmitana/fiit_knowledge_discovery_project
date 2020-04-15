@@ -1,5 +1,68 @@
-import pandas as pd
 import datetime
+import pandas as pd
+import numpy as np
+
+
+def split_meter_data(
+    meter_data,
+    buildings_data,
+    train_size=1.0,
+    dev_size=0.0,
+    test_size=0.0,
+    seed=13
+):
+    """
+    Split meter data to train, dev and test sets.
+
+    Created sets are disjoint with respect to containing buildings and
+    each split contains buildings from each site.
+
+    :param meter_data: pandas.DataFrame, meter data.
+    :param buildings_data: pandas.DataFrame, buildings data.
+    :param train_size: float (default: 1.0), size of train set.
+    :param dev_size: float (default: 0.0), size of dev set.
+    :param test_size: float (default: 0.0), size of test set.
+    :param seed: int (default: 13), random seed.
+    :return:
+        pandas.DataFrame, train meter data.
+        pandas.DataFrame, dev meter data.
+        pandas.DataFrame, test meter data.
+    """
+    n_sites = len(buildings_data.site_id.unique())
+    sites = [[] for _ in range(n_sites)]
+
+    # Get all building for particular site
+    for _, row in buildings_data.iterrows():
+        sites[row['site_id']].append(row['building_id'])
+
+    # Get train, dev and test buildings from each site
+    train_buildings, dev_buildings, test_buildings = [], [], []
+    for site in sites:
+        # Compute indices
+        n_buildings = len(site)
+        idx1 = int(n_buildings * 0.1)
+        idx2 = idx1 * 2
+
+        # Shuffle
+        np.random.seed(seed)
+        perm = np.random.permutation(n_buildings)
+        buildings = np.array(site)[perm]
+
+        # Split to dev, test and train
+        dev_buildings_aux, test_buildings_aux, train_buildings_aux = \
+            np.split(buildings, [idx1, idx2])
+
+        # Add buildings from current site to resulting lists
+        train_buildings.extend(train_buildings_aux)
+        dev_buildings.extend(dev_buildings_aux)
+        test_buildings.extend(test_buildings_aux)
+
+    # Split meter data to train, dev and test
+    train_meter_data = meter_data[meter_data.building_id.isin(train_buildings)]
+    dev_meter_data = meter_data[meter_data.building_id.isin(dev_buildings)]
+    test_meter_data = meter_data[meter_data.building_id.isin(test_buildings)]
+
+    return train_meter_data, dev_meter_data, test_meter_data
 
 
 def merge_data(building, weather, meter, hour_time_diff=1):
@@ -55,7 +118,8 @@ def preprocess_and_merge_data(
         preprocessing.
     :param weather_fu: CustomFeatureUnion, weather data preprocessing.
     :param meter_fu: CustomFeatureUnion, meter data preprocessing.
-    :param fit: boolean, whether union will only transform or also fit.
+    :param fit: bool (default: False), whether union will only transform
+        or also fit.
     :param merge_data_kwargs: dict, keyword arguments of `merge_data`
         function.
     :return:
