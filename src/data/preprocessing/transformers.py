@@ -254,30 +254,35 @@ class StandardScalerTransformer(TransformerMixin):
         self.columns = None
 
     def fit(self, df, y=None, **fit_params):
+        if self.new_column is None:
+            self.columns = [self.column]
+        else:
+            self.columns = [self.column, self.new_column]
+
+        if self.all_columns:
+            self.columns = df.columns.values.tolist()
+            if self.new_column is not None:
+                self.columns.append(self.new_column)
+
         self.scaler = StandardScaler()
         self.scaler.fit(df[[self.column]])
         return self
 
     def transform(self, df, **transform_params):
         if self.all_columns:
-            self.columns = df.columns.values.tolist()
             column = self.column
             if self.new_column is not None:
                 column = self.new_column
-                self.columns.append(self.new_column)
             df[column] = self.scaler.transform(df[[self.column]])
         else:
             if self.new_column is None:
                 data = self.scaler.transform(df[[self.column]])
-                columns = [self.column]
             else:
                 data = {
                     self.column: df[self.column],
                     self.new_column: self.scaler.transform(df[[self.column]])
                 }
-                columns = [self.column, self.new_column]
-            self.columns = columns
-            df = pd.DataFrame(data, columns=columns)
+            df = pd.DataFrame(data, columns=self.columns)
 
         return df
 
@@ -306,6 +311,7 @@ class AddPreviousMeterReadingTransformer(TransformerMixin):
         self.columns = ['meter_reading']
         for i in range(1, self.time_horizon + 1):
             self.columns.append(f'meter_reading_scaled_{i}')
+        self.min_value = None
 
     def _get_new_date(self, row, step=1):
         """
@@ -322,6 +328,7 @@ class AddPreviousMeterReadingTransformer(TransformerMixin):
         return [row['building_id'], row['meter'], str(new_date)]
 
     def fit(self, df, y=None, **fit_params):
+        self.min_value = df['meter_reading_scaled'].min()
         return self
 
     def transform(self, df, **transform_params):
@@ -362,7 +369,7 @@ class AddPreviousMeterReadingTransformer(TransformerMixin):
                 on=['building_id', 'meter', 'timestamp'],
                 rsuffix=f"_{i}"
             ).drop_duplicates()
-        df = df.fillna(0)
+        df = df.fillna(self.min_value)
         return df[self.columns]
 
     def get_feature_names(self):
