@@ -23,15 +23,19 @@ class CustomFeatureUnion(FeatureUnion):
             feature_names.extend(names)
         return feature_names
 
-    def union_features(self, x):
+    def union_features(self, x, fit=False):
         """
         Union features and assign them names.
 
         :param x: pandas.DataFrame, dataframe to get features from.
+        :param fit: boolean, whether union will only transform or also
+            fit.
         :return: pandas.DataFrame, dataframe containing transformed
             feature.
         """
-        features = pd.DataFrame(self.fit_transform(x))
+        if fit:
+            self.fit(x)
+        features = pd.DataFrame(self.transform(x))
         features.columns = self.get_feature_names()
         return features
 

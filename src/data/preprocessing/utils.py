@@ -41,6 +41,7 @@ def preprocess_and_merge_data(
     buildings_fu,
     weather_fu,
     meter_fu,
+    fit=False,
     **merge_data_kwargs
 ):
     """
@@ -54,6 +55,7 @@ def preprocess_and_merge_data(
         preprocessing.
     :param weather_fu: CustomFeatureUnion, weather data preprocessing.
     :param meter_fu: CustomFeatureUnion, meter data preprocessing.
+    :param fit: boolean, whether union will only transform or also fit.
     :param merge_data_kwargs: dict, keyword arguments of `merge_data`
         function.
     :return:
@@ -62,9 +64,9 @@ def preprocess_and_merge_data(
         pandas.DataFrame, dataframe containing other columns.
     """
     # Preprocess data using corresponding feature unions
-    buildings_features = buildings_fu.union_features(buildings_data)
-    weather_features = weather_fu.union_features(weather_data)
-    meter_features = meter_fu.union_features(meter_data)
+    buildings_features = buildings_fu.union_features(buildings_data, fit=fit)
+    weather_features = weather_fu.union_features(weather_data, fit=fit)
+    meter_features = meter_fu.union_features(meter_data, fit=fit)
 
     # Merge data and drop useless columns
     data = merge_data(
