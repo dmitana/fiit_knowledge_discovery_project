@@ -27,34 +27,31 @@ class RollingAverageNanTransformer(TransformerMixin):
 
     def transform(self, df, **transform_params):
         df = df.copy()
-        empty_rows = df[df[self.column].isna()][['site_id', 'timestamp']]
-        for site_id, timestamp in empty_rows.values:
-            # Obtain timestamp self.window_size hours before timestamp
-            current_timestamp = datetime.datetime \
-                .strptime(timestamp, "%Y-%m-%d %H:%M:%S")
-            prew_timestamp = current_timestamp - \
-                datetime.timedelta(hours=self.window_size)
-            prew_timestamp = datetime.datetime \
-                .strftime(prew_timestamp, "%Y-%m-%d %H:%M:%S")
 
-            df_slice = df[
-                (df.site_id == site_id) &
-                (df.timestamp >= prew_timestamp) &
-                (df.timestamp < timestamp)
-            ][self.column].dropna().values
+        empty_rows = df[df[self.column].isna()][['site_id', 'timestamp']]
+        empty_rows['date'] = pd.to_datetime(empty_rows.timestamp)
+        for i, row in empty_rows.iterrows():
+            site_id = row['site_id']
+            timestamp = row['timestamp']
+            date = row['date']
+            prew_timestamp = str(
+                date - datetime.timedelta(hours=self.window_size)
+            )
+
+            df_site = df[df.site_id == site_id]
+            df_slice = df_site[df_site.timestamp >= prew_timestamp]
+            df_slice = df_slice[df_slice.timestamp < timestamp]
+            df_slice = df_slice[self.column].dropna().values
+
             if len(df_slice) > 0:
                 fill_in_value = np.mean(df_slice).round(1)
             else:
-                current_hour = current_timestamp.hour
+                current_hour = date.hour
                 fill_in_value = self \
                     .averages_per_site_per_hour[site_id][current_hour]
 
             # Fill in mean value now in case next value is also NaN
-            df.loc[
-                (df.site_id == site_id) &
-                (df.timestamp == timestamp),
-                self.column
-            ] = fill_in_value
+            df.loc[df.index == i, self.column] = fill_in_value
         return df[[self.column]]
 
     def get_feature_names(self):
