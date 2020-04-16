@@ -310,37 +310,33 @@ class AddPreviousMeterReadingTransformer(TransformerMixin):
             self.columns.append(f'meter_reading_scaled_{i}')
         self.min_value = None
 
-    def _get_new_date(self, row, step=1):
-        """
-        Gets new date `step` times `self.sample_length` in the future
-        compared to date of `row`.
-
-        :param row: pd.Series, row for which future date will be found
-        :param step: int, how many steps to look into future
-        :return: Datetime, future date
-        """
-        new_date = row['date'] + datetime.timedelta(
-            seconds=self.sample_length * step
-        )
-        return [row['building_id'], row['meter'], str(new_date)]
-
     def fit(self, df, y=None, **fit_params):
         self.min_value = df['meter_reading_scaled'].min()
         return self
 
     def transform(self, df, **transform_params):
         df = df.copy().reset_index(drop=True)
-        df['date'] = pd.to_datetime(df['timestamp'])
-        data = {}
-        for i in range(1, self.time_horizon + 1):
-            column = f'timestamp_{i}'
-            aux = df.apply(lambda x: self._get_new_date(x, step=i), axis=1)
-            data['building_id'] = aux.apply(lambda x: x[0])
-            data['meter'] = aux.apply(lambda x: x[1])
-            data[column] = aux.apply(lambda x: x[2])
-        data['meter_reading_scaled'] = df['meter_reading_scaled']
 
-        new_df = pd.DataFrame(data)
+        timestamps = pd.to_datetime(df.timestamp.unique())
+
+        timestamps_aux = []
+        for i, timestamp in enumerate(timestamps):
+            timestamps_aux.append([str(timestamp)])
+            for j in range(1, self.time_horizon + 1):
+                new_timestamp = timestamp + datetime.timedelta(hours=j)
+                timestamps_aux[i].append(str(new_timestamp))
+
+        columns = ['timestamp']
+        columns.extend([
+            f'timestamp_{i}' for i in range(1, self.time_horizon + 1)
+        ])
+        df_timestamp = pd.DataFrame(timestamps_aux, columns=columns)
+
+        new_df = df.join(
+            df_timestamp.set_index(['timestamp']),
+            on='timestamp'
+        )
+
         for i in range(1, self.time_horizon + 1):
             timestamp = f'timestamp_{i}'
             aux_df = new_df[[
