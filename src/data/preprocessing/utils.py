@@ -65,6 +65,53 @@ def split_meter_data(
     return train_meter_data, dev_meter_data, test_meter_data
 
 
+def filter_data(
+    buildings_data,
+    weather_data,
+    meter_data,
+    site_id=None,
+    primary_use=None,
+    meter=None,
+    meter_reading=None
+):
+    """
+    Filter data before preprocessing.
+
+    :param buildings_data: pandas.DataFrame, buildings data.
+    :param weather_data: pandas.DataFrame, weather data.
+    :param meter_data: pandas.DataFrame, meter data.
+    :param site_id: int|list (default: None), site id to be used.
+    :param primary_use: int|list (default: None), primary use to be used.
+    :param meter: int|list (default: None), meter type to be used.
+    :param meter_reading: float (default: None), upper bound of meter
+        reading to be used.
+    :return:
+        pandas.DataFrame, dataframe containing filtered buildings data.
+        pandas.DataFrame, dataframe containing filtered weather data.
+        pandas.DataFrame, dataframe containing filtered meter data.
+    """
+    if site_id is not None:
+        site_id = site_id if type(site_id) in (list, tuple) else [site_id]
+        buildings_data = buildings_data[buildings_data.site_id.isin(site_id)]
+        weather_data = weather_data[weather_data.site_id.isin(site_id)]
+    if primary_use is not None:
+        primary_use = primary_use if type(primary_use) in (list, tuple) \
+            else [primary_use]
+        buildings_data = buildings_data[
+            buildings_data.primary_use.isin(primary_use)
+        ]
+    if meter is not None:
+        meter = meter if type(meter) in (list, tuple) else [meter]
+        meter_data = meter_data[meter_data.meter.isin(meter)]
+    if meter_reading is not None:
+        meter_data = meter_data[meter_data.meter_reading < meter_reading]
+
+    buildings_ids = buildings_data.building_id.values
+    meter_data = meter_data[meter_data.building_id.isin(buildings_ids)]
+
+    return buildings_data, weather_data, meter_data
+
+
 def merge_data(building, weather, meter, hour_time_diff=1):
     """
     Merges building data, weather data and meter data to one data set.
@@ -91,10 +138,9 @@ def merge_data(building, weather, meter, hour_time_diff=1):
     merged_data = pd.merge(
         meter_building,
         weather_aux,
-        how='left',
         on=['site_id', 'timestamp']
     )[1:]
-    return merged_data.dropna()
+    return merged_data
 
 
 def preprocess_and_merge_data(
