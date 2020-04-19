@@ -82,3 +82,13 @@ meter_fu = CustomFeatureUnion(
     ],
     n_jobs=-1
 )
+
+# TODO: add weather data, maybe rename
+merged_fu = CustomFeatureUnion(
+    [
+        ('primary use', primary_use_pipeline),
+        ('square feet', square_feet_pipeline),
+        ('meter', meter_pipeline)
+    ],
+    n_jobs=-1
+)

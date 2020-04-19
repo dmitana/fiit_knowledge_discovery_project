@@ -236,7 +236,14 @@ class StandardScalerTransformer(TransformerMixin):
     Returned dataframe contains only transformed column if `all_columns`
     is False else it returns entire dataframe with scaled `column`.
     """
-    def __init__(self, column, new_column=None, all_columns=False):
+
+    def __init__(
+        self,
+        column,
+        new_column=None,
+        group_by_column=None,
+        all_columns=False
+    ):
         """
         Create a new instance of `StandardScalerTransformer` class.
 
@@ -244,9 +251,14 @@ class StandardScalerTransformer(TransformerMixin):
         :param new_column: str (default: None), column where scaled
             values are to be saved. If `None`, scaled values are saved
             to `column`.
+        :param group_by_column: str|list (default: None), column to be
+            data grouped by.
+        :param all_columns: bool (default: False), whether to return
+            entire dataframe.
         """
         self.column = column
         self.new_column = new_column
+        self.group_by_column = group_by_column
         self.all_columns = all_columns
         self.columns = None
 
@@ -261,8 +273,14 @@ class StandardScalerTransformer(TransformerMixin):
             if self.new_column is not None:
                 self.columns.append(self.new_column)
 
+        if self.group_by_column is not None:
+            values = df.groupby(by=self.group_by_column).min()
+            values = values[self.column].values.reshape(-1, 1)
+        else:
+            values = df[[self.column]]
+
         self.scaler = StandardScaler()
-        self.scaler.fit(df[[self.column]])
+        self.scaler.fit(values)
         return self
 
     def transform(self, df, **transform_params):

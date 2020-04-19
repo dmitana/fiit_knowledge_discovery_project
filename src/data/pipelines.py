@@ -22,12 +22,21 @@ primary_use_pipeline = Pipeline([
 ])
 
 square_feet_pipeline = Pipeline([
-    ('normalization', StandardScalerTransformer('square_feet'))
+    (
+        'normalization',
+        StandardScalerTransformer('square_feet', group_by_column='building_id')
+    )
 ])
 
 air_temperature_pipeline = Pipeline([
     ('rolling average', RollingAverageNanTransformer('air_temperature')),
-    ('normalization', StandardScalerTransformer('air_temperature'))
+    (
+        'normalization',
+        StandardScalerTransformer(
+            'air_temperature',
+            group_by_column=['site_id', 'timestamp']
+        )
+    )
 ])
 
 air_temperature_without_outliers_pipeline = Pipeline([
@@ -37,7 +46,13 @@ air_temperature_without_outliers_pipeline = Pipeline([
 
 dew_temperature_pipeline = Pipeline([
     ('rolling average', RollingAverageNanTransformer('dew_temperature')),
-    ('normalization', StandardScalerTransformer('dew_temperature'))
+    (
+        'normalization',
+        StandardScalerTransformer(
+            'dew_temperature',
+            group_by_column=['site_id', 'timestamp']
+        )
+    )
 ])
 
 dew_temperature_without_outliers_pipeline = Pipeline([
@@ -47,12 +62,24 @@ dew_temperature_without_outliers_pipeline = Pipeline([
 
 sea_level_pressure_pipeline = Pipeline([
     ('rolling average', RollingAverageNanTransformer('sea_level_pressure')),
-    ('normalization', StandardScalerTransformer('sea_level_pressure'))
+    (
+        'normalization',
+        StandardScalerTransformer(
+            'sea_level_pressure',
+            group_by_column=['site_id', 'timestamp']
+        )
+    )
 ])
 
 wind_speed_pipeline = Pipeline([
     ('rolling average', RollingAverageNanTransformer('wind_speed')),
-    ('normalization', StandardScalerTransformer('wind_speed'))
+    (
+        'normalization',
+        StandardScalerTransformer(
+            'wind_speed',
+            group_by_column=['site_id', 'timestamp']
+        )
+    )
 ])
 
 wind_speed_without_outliers_pipeline = Pipeline([
@@ -62,12 +89,16 @@ wind_speed_without_outliers_pipeline = Pipeline([
 
 wind_direction_pipeline = Pipeline([
     ('rolling average', RollingAverageNanTransformer('wind_direction')),
-    ('normalization', StandardScalerTransformer('wind_direction'))
+    (
+        'normalization',
+        StandardScalerTransformer(
+            'wind_direction',
+            group_by_column=['site_id', 'timestamp']
+        )
+    )
 ])
 
 meter_pipeline = Pipeline([
-    ('meter type', ValuePicker(feature='meter', specific_value=0)),
-    ('meter reading', ValuePicker(feature='meter_reading', threshold=200)),
     (
         'normalization',
         StandardScalerTransformer(
