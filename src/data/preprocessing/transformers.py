@@ -20,25 +20,39 @@ class RollingAverageNanTransformer(TransformerMixin):
         aux = df.copy()
         aux['timestamp_hour'] = \
             pd.to_datetime(aux['timestamp']).apply(lambda x: x.hour)
+        aux.drop_duplicates(subset=['site_id', 'timestamp'], inplace=True)
         for i in range(16):
             self.averages_per_site_per_hour[i] = aux[aux.site_id == i] \
                 .groupby(by="timestamp_hour").mean()[self.column].values
         return self
 
     def transform(self, df, **transform_params):
-        df = df.copy()
+        if df[self.column].isna().sum() == 0:
+            return df
 
-        empty_rows = df[df[self.column].isna()][['site_id', 'timestamp']]
-        empty_rows['date'] = pd.to_datetime(empty_rows.timestamp)
-        for i, row in empty_rows.iterrows():
+        df = df.copy()
+        df['indices'] = df.index
+
+        group_by_empty_rows = df[df[self.column].isna()] \
+            .groupby(by=['site_id', 'timestamp']).agg({'indices': list})
+        group_by_empty_rows['site_id'] = group_by_empty_rows.index \
+            .get_level_values('site_id')
+        group_by_empty_rows['timestamp'] = group_by_empty_rows.index \
+            .get_level_values('timestamp')
+        group_by_empty_rows['date'] = pd.to_datetime(
+            group_by_empty_rows.index.get_level_values('timestamp')
+        )
+        weather_df = df.drop_duplicates(subset=['site_id', 'timestamp'])
+        for i, row in group_by_empty_rows.iterrows():
             site_id = row['site_id']
             timestamp = row['timestamp']
             date = row['date']
+
             prew_timestamp = str(
                 date - datetime.timedelta(hours=self.window_size)
             )
 
-            df_site = df[df.site_id == site_id]
+            df_site = weather_df[weather_df.site_id == site_id]
             df_slice = df_site[df_site.timestamp >= prew_timestamp]
             df_slice = df_slice[df_slice.timestamp < timestamp]
             df_slice = df_slice[self.column].dropna().values
@@ -51,8 +65,11 @@ class RollingAverageNanTransformer(TransformerMixin):
                     .averages_per_site_per_hour[site_id][current_hour]
 
             # Fill in mean value now in case next value is also NaN
-            df.loc[df.index == i, self.column] = fill_in_value
-        return df[[self.column]]
+            for index in row['indices']:
+                df.loc[df.index == index, self.column] = fill_in_value
+                weather_df.loc[weather_df.index == index, self.column] = \
+                    fill_in_value
+        return df
 
     def get_feature_names(self):
         return self.column
@@ -64,8 +81,9 @@ class OutlierTransformer(TransformerMixin):
 
     Entire dataframe is returned.
     """
-    def __init__(self, column):
+    def __init__(self, column, group_by_columns=None):
         self.column = column
+        self.group_by_columns = group_by_columns
 
     def fit(self, df, y=None, **fit_params):
         iqr = df[self.column].quantile(q=0.75) - \
