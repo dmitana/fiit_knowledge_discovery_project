@@ -86,6 +86,9 @@ class OutlierTransformer(TransformerMixin):
         self.group_by_columns = group_by_columns
 
     def fit(self, df, y=None, **fit_params):
+        if self.group_by_columns is not None:
+            df = df.drop_duplicates(subset=self.group_by_columns)
+
         iqr = df[self.column].quantile(q=0.75) - \
               df[self.column].quantile(q=0.25)
 

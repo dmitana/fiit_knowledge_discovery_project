@@ -40,7 +40,13 @@ air_temperature_pipeline = Pipeline([
 ])
 
 air_temperature_without_outliers_pipeline = Pipeline([
-    ('replace outliers', OutlierTransformer('air_temperature')),
+    (
+        'replace outliers',
+        OutlierTransformer(
+            'air_temperature',
+            group_by_columns=['site_id', 'timestamp']
+        )
+    ),
     ('air temperature', air_temperature_pipeline)
 ])
 
@@ -56,7 +62,13 @@ dew_temperature_pipeline = Pipeline([
 ])
 
 dew_temperature_without_outliers_pipeline = Pipeline([
-    ('replace outliers', OutlierTransformer('dew_temperature')),
+    (
+        'replace outliers',
+        OutlierTransformer(
+            'dew_temperature',
+            group_by_columns=['site_id', 'timestamp']
+        )
+    ),
     ('dew temperature', dew_temperature_pipeline)
 ])
 
@@ -83,7 +95,13 @@ wind_speed_pipeline = Pipeline([
 ])
 
 wind_speed_without_outliers_pipeline = Pipeline([
-    ('replace outliers', OutlierTransformer('wind_speed')),
+    (
+        'replace outliers',
+        OutlierTransformer(
+            'wind_speed',
+            group_by_columns=['site_id', 'timestamp']
+        )
+    ),
     ('wind speed', wind_speed_pipeline)
 ])
 

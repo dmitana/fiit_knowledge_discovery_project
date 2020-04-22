@@ -95,3 +95,16 @@ merged_fu = CustomFeatureUnion(
     ],
     n_jobs=-1
 )
+
+merged_fu_without_outliers = CustomFeatureUnion(
+    [
+        ('primary use', primary_use_pipeline),
+        ('square feet', square_feet_pipeline),
+        ('meter', meter_pipeline),
+        ('air temperature', air_temperature_without_outliers_pipeline),
+        ('dew temperature', dew_temperature_without_outliers_pipeline),
+        ('wind direction', wind_direction_pipeline),
+        ('wind speed', wind_speed_without_outliers_pipeline)
+    ],
+    n_jobs=-1
+)
