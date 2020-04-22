@@ -11,6 +11,7 @@ class RollingAverageNanTransformer(TransformerMixin):
 
     Returned dataframe contains only transformed column.
     """
+
     def __init__(self, column, window_size=5):
         self.column = column
         self.window_size = window_size
@@ -43,7 +44,7 @@ class RollingAverageNanTransformer(TransformerMixin):
             group_by_empty_rows.index.get_level_values('timestamp')
         )
         weather_df = df.drop_duplicates(subset=['site_id', 'timestamp'])
-        for i, row in group_by_empty_rows.iterrows():
+        for _, row in group_by_empty_rows.iterrows():
             site_id = row['site_id']
             timestamp = row['timestamp']
             date = row['date']
@@ -81,6 +82,7 @@ class OutlierTransformer(TransformerMixin):
 
     Entire dataframe is returned.
     """
+
     def __init__(self, column, group_by_columns=None):
         self.column = column
         self.group_by_columns = group_by_columns
@@ -90,7 +92,7 @@ class OutlierTransformer(TransformerMixin):
             df = df.drop_duplicates(subset=self.group_by_columns)
 
         iqr = df[self.column].quantile(q=0.75) - \
-              df[self.column].quantile(q=0.25)
+            df[self.column].quantile(q=0.25)
 
         self.upper_bound = df[self.column].quantile(q=0.75) + 1.5 * iqr
         self.lower_bound = df[self.column].quantile(q=0.25) - 1.5 * iqr
@@ -115,6 +117,7 @@ class PrimaryUseTransformer(TransformerMixin):
     Returned dataframe contains only transformed column.
     Transformation is done in place.
     """
+
     def fit(self, df, y=None, **fit_params):
         return self
 
@@ -167,6 +170,7 @@ class FeatureSelectorTransformer(TransformerMixin):
 
     Returned dataframe contains only transformed column.
     """
+
     def __init__(self, feature):
         self.feature = feature
 
@@ -188,6 +192,7 @@ class ValuePicker(TransformerMixin):
 
     Entire dataframe is returned.
     """
+
     def __init__(self, feature, threshold=None, specific_value=None):
         """
         :param feature: str, name of feature for which values will be
@@ -226,6 +231,7 @@ class OneHotEncoderTransformer(TransformerMixin):
 
     Returned dataframe contains only transformed columns.
     """
+
     def __init__(self, column):
         """
         Create a new instance of `OneHotEncoderTransformer` class.
@@ -333,6 +339,7 @@ class AddPreviousMeterReadingTransformer(TransformerMixin):
     Returns entire dataframe with `time_horizon` new features
     representing previous meter readings.
     """
+
     def __init__(self, time_horizon, sample_length=3600):
         """
         Sets `time_horizon` and `sample_length`.
@@ -344,7 +351,7 @@ class AddPreviousMeterReadingTransformer(TransformerMixin):
         """
         self.time_horizon = time_horizon
         self.sample_length = sample_length
-        self.columns = ['meter_reading']
+        self.columns = []
         for i in range(1, self.time_horizon + 1):
             self.columns.append(f'meter_reading_scaled_{i}')
         self.min_value = None
