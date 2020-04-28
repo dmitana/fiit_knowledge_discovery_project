@@ -241,7 +241,9 @@ class OneHotEncoderTransformer(TransformerMixin):
         self.column = column
 
     def fit(self, df, y=None, **fit_params):
-        self.one_hot_encoder = OneHotEncoder(sparse=False)
+        self.one_hot_encoder = OneHotEncoder(
+            sparse=False, handle_unknown='ignore'
+        )
         self.one_hot_encoder.fit(df[[self.column]])
         self.categories = self.one_hot_encoder.categories_[0]
         return self
@@ -342,7 +344,7 @@ class AddPreviousMeterReadingTransformer(TransformerMixin):
 
     def __init__(self, time_horizon, sample_length=3600):
         """
-        Sets `time_horizon` and `sample_length`.
+        Set `time_horizon` and `sample_length`.
 
         :param time_horizon: int, number of previous values that will be
             added as new features
