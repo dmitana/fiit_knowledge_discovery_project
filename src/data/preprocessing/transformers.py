@@ -1,4 +1,5 @@
 import datetime
+from functools import reduce
 import numpy as np
 import pandas as pd
 from sklearn.base import TransformerMixin
@@ -22,7 +23,8 @@ class RollingAverageNanTransformer(TransformerMixin):
         aux['timestamp_hour'] = \
             pd.to_datetime(aux['timestamp']).apply(lambda x: x.hour)
         aux.drop_duplicates(subset=['site_id', 'timestamp'], inplace=True)
-        for i in range(16):
+
+        for i in aux.site_id.unique():
             self.averages_per_site_per_hour[i] = aux[aux.site_id == i] \
                 .groupby(by="timestamp_hour").mean()[self.column].values
         return self
@@ -62,8 +64,15 @@ class RollingAverageNanTransformer(TransformerMixin):
                 fill_in_value = np.mean(df_slice).round(1)
             else:
                 current_hour = date.hour
-                fill_in_value = self \
-                    .averages_per_site_per_hour[site_id][current_hour]
+                if site_id in self.averages_per_site_per_hour:
+                    fill_in_value = self \
+                        .averages_per_site_per_hour[site_id][current_hour]
+                else:
+                    fill_in_value = reduce(
+                        lambda x, y: x + y[current_hour],
+                        self.averages_per_site_per_hour.values(),
+                        0
+                    ) / len(self.averages_per_site_per_hour)
 
             # Fill in mean value now in case next value is also NaN
             for index in row['indices']:
